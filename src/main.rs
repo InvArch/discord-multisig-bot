@@ -78,29 +78,54 @@ impl EventHandler for Handler {
                                 call_hash,
                                 call,
                             } if core_id == CORE_ID => {
-                                let id = channel.create_forum_post(http, CreateForumPost::new(hex::encode(call_hash), CreateMessage::new().embed( CreateEmbed::new()
-                                                .title("New Multisig Call")
-                                                .description(format!("Core ID: {core_id}, account: {executor_account}"))
-                                                .author(CreateEmbedAuthor::new(format!("Author: {voter}")))
-                                                .color(Color::PURPLE)
-                                                .field(
-                                                    "Aye Votes",
-                                                    match votes_added {
+                                let id = channel.create_forum_post(
+                                    http,
+                                    CreateForumPost::new(
+                                        hex::encode(call_hash),
+                                        CreateMessage::new()
+                                            .embed(
+                                                CreateEmbed::new()
+                                                    .title("New Multisig Call")
+                                                    .description(format!("Core ID: {core_id}, account: {executor_account}"))
+                                                    .author(CreateEmbedAuthor::new(format!("Author: {voter}")))
+                                                    .color(Color::PURPLE)
+                                                    .field(
+                                                        "Aye Votes",
+                                                        match votes_added {
+                                                            Vote::Aye(v) => v / TOKEN_DECIMALS,
+                                                            _ => 0u128,
+                                                        }
+                                                        .to_string(),
+                                                        false,
+                                                    )
+                                                    .field("Nay Votes", "0", false)
+                                                    .field("Voters", format!("{voter} - {} - Aye", match votes_added {
                                                         Vote::Aye(v) => v / TOKEN_DECIMALS,
                                                         _ => 0u128,
-                                                    }
-                                                    .to_string(),
-                                                    false,
+                                                    }), false)
+                                                    .field("Call Hash", format!("0x{}", hex::encode(call_hash)), false)
+                                                    .field("Call", format!("{:?}", call.try_decode().unwrap()), false)
+                                            ).components(vec![
+                                                CreateActionRow::Buttons(
+                                                    vec![
+                                                        CreateButton::new_link(
+                                                            format!(
+                                                                "https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Finvarch-tinkernet.api.onfinality.io%2Fpublic-ws#/extrinsics/decode/0x{}",
+                                                                hex::encode(
+                                                                    RuntimeCall::INV4(
+                                                                        INV4Call::vote_multisig {
+                                                                            core_id: CORE_ID,
+                                                                            call_hash,
+                                                                            aye: true
+                                                                        }
+                                                                    ).encode()
+                                                                )
+                                                            )
+                                                        ).label("Vote")
+                                                    ]
                                                 )
-                                                .field("Nay Votes", "0", false)
-                                                .field("Voters", format!("{voter} - {} - Aye", match votes_added {
-                                                    Vote::Aye(v) => v / TOKEN_DECIMALS,
-                                                    _ => 0u128,
-                                                }), false)
-                                                .field("Call Hash", format!("0x{}", hex::encode(call_hash)), false)
-                                                .field("Call", format!("{:?}", call.try_decode().unwrap()), false)
-                                ).components(vec![CreateActionRow::Buttons(vec![CreateButton::new_link(format!("https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Finvarch-tinkernet.api.onfinality.io%2Fpublic-ws#/extrinsics/decode/0x{}", hex::encode(RuntimeCall::INV4(INV4Call::vote_multisig { core_id: CORE_ID, call_hash, aye: true }).encode()))).label("Vote")])]
-                                        )))
+                                            ]
+                                            )))
                                     .await
                                     .unwrap().id;
 
@@ -157,23 +182,54 @@ impl EventHandler for Handler {
                                             ctx.http.get_channel(message_id.into()).await
                                         {
                                             let _ = post
-                                            .edit_message(http, message_id, EditMessage::new()
-                                                .embed( CreateEmbed::new()
-                                                .title("New Multisig Call")
-                                                .description(format!("Core ID: {core_id}, account: {executor_account}"))
-                                                .author( CreateEmbedAuthor::new(format!("Author: {author}")))
-                                                .color(Color::PURPLE)
-                                                .field(
-                                                    "Aye Votes",
-                                                    (current_votes.ayes / TOKEN_DECIMALS).to_string(),
-                                                    false,
+                                                .edit_message(
+                                                    http,
+                                                    message_id,
+                                                    EditMessage::new().embed(
+                                                        CreateEmbed::new()
+                                                            .title("New Multisig Call")
+                                                            .description(format!(
+                                                                "Core ID: {core_id}, account: \
+                                                                 {executor_account}"
+                                                            ))
+                                                            .author(CreateEmbedAuthor::new(
+                                                                format!("Author: {author}"),
+                                                            ))
+                                                            .color(Color::PURPLE)
+                                                            .field(
+                                                                "Aye Votes",
+                                                                (current_votes.ayes
+                                                                    / TOKEN_DECIMALS)
+                                                                    .to_string(),
+                                                                false,
+                                                            )
+                                                            .field(
+                                                                "Nay Votes",
+                                                                (current_votes.nays
+                                                                    / TOKEN_DECIMALS)
+                                                                    .to_string(),
+                                                                false,
+                                                            )
+                                                            .field("Voters", list, false)
+                                                            .field(
+                                                                "Call Hash",
+                                                                format!(
+                                                                    "0x{}",
+                                                                    hex::encode(call_hash)
+                                                                ),
+                                                                false,
+                                                            )
+                                                            .field(
+                                                                "Call",
+                                                                format!(
+                                                                    "{:?}",
+                                                                    call.try_decode().unwrap()
+                                                                ),
+                                                                false,
+                                                            ),
+                                                    ),
                                                 )
-                                                .field("Nay Votes", (current_votes.nays / TOKEN_DECIMALS).to_string(), false)
-                                                .field("Voters", list, false)
-                                                .field("Call Hash", format!("0x{}", hex::encode(call_hash)), false)
-                                                .field("Call", format!("{:?}", call.try_decode().unwrap()), false)
-                                        )
-                                            ).await;
+                                                .await;
                                         }
 
                                         let _ = db.insert(
@@ -210,19 +266,52 @@ impl EventHandler for Handler {
                                         if let Ok(Channel::Guild(mut post)) =
                                             ctx.http.get_channel(message_id.into()).await
                                         {
-                                            let _ =  post
-                                    .send_message(http, CreateMessage::new()
-                                       .embed(CreateEmbed::new()
-                                                .title("Multisig Call Executed")
-                                                .description(format!("Core ID: {core_id}, account: {executor_account}"))
-                                                .author(CreateEmbedAuthor::new(format!("Last voter: {voter}")))
-                                                .color(if result.is_ok() {Color::DARK_GREEN} else {Color::RED})
-                                                .field("Call Hash", format!("0x{}", hex::encode(call_hash)), false)
-                                                .field("Call", format!("{:?}", call.try_decode().unwrap()), false)
-                                                .field("Result", if result.is_err() {"Error"} else {"Successful"}, false)
-                                        )
-                                    )
-                                    .await;
+                                            let _ = post
+                                                .send_message(
+                                                    http,
+                                                    CreateMessage::new().embed(
+                                                        CreateEmbed::new()
+                                                            .title("Multisig Call Executed")
+                                                            .description(format!(
+                                                                "Core ID: {core_id}, account: \
+                                                                 {executor_account}"
+                                                            ))
+                                                            .author(CreateEmbedAuthor::new(
+                                                                format!("Last voter: {voter}"),
+                                                            ))
+                                                            .color(if result.is_ok() {
+                                                                Color::DARK_GREEN
+                                                            } else {
+                                                                Color::RED
+                                                            })
+                                                            .field(
+                                                                "Call Hash",
+                                                                format!(
+                                                                    "0x{}",
+                                                                    hex::encode(call_hash)
+                                                                ),
+                                                                false,
+                                                            )
+                                                            .field(
+                                                                "Call",
+                                                                format!(
+                                                                    "{:?}",
+                                                                    call.try_decode().unwrap()
+                                                                ),
+                                                                false,
+                                                            )
+                                                            .field(
+                                                                "Result",
+                                                                if result.is_err() {
+                                                                    "Error"
+                                                                } else {
+                                                                    "Successful"
+                                                                },
+                                                                false,
+                                                            ),
+                                                    ),
+                                                )
+                                                .await;
 
                                             let _ = post
                                                 .edit_thread(
