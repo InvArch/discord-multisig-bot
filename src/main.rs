@@ -1,4 +1,3 @@
-use dotenv;
 use futures::StreamExt;
 use serenity::{
     all::{
@@ -82,7 +81,7 @@ impl EventHandler for Handler {
                                 let id = channel.create_forum_post(http, CreateForumPost::new(hex::encode(call_hash), CreateMessage::new().embed( CreateEmbed::new()
                                                 .title("New Multisig Call")
                                                 .description(format!("Core ID: {core_id}, account: {executor_account}"))
-                                                .author(CreateEmbedAuthor::new(format!("Author: {}", voter.to_string())))
+                                                .author(CreateEmbedAuthor::new(format!("Author: {}", voter)))
                                                 .color(Color::PURPLE)
                                                 .field(
                                                     "Aye Votes",
@@ -162,7 +161,7 @@ impl EventHandler for Handler {
                                                 .embed( CreateEmbed::new()
                                                 .title("New Multisig Call")
                                                 .description(format!("Core ID: {core_id}, account: {executor_account}"))
-                                                .author( CreateEmbedAuthor::new(format!("Author: {}", author.to_string())))
+                                                .author( CreateEmbedAuthor::new(format!("Author: {}", author)))
                                                 .color(Color::PURPLE)
                                                 .field(
                                                     "Aye Votes",
@@ -216,7 +215,7 @@ impl EventHandler for Handler {
                                        .embed(CreateEmbed::new()
                                                 .title("Multisig Call Executed")
                                                 .description(format!("Core ID: {core_id}, account: {executor_account}"))
-                                                .author(CreateEmbedAuthor::new(format!("Last voter: {}", voter.to_string())))
+                                                .author(CreateEmbedAuthor::new(format!("Last voter: {}", voter)))
                                                 .color(if result.is_ok() {Color::DARK_GREEN} else {Color::RED})
                                                 .field("Call Hash", format!("0x{}", hex::encode(call_hash)), false)
                                                 .field("Call", format!("{:?}", call.try_decode().unwrap()), false)
