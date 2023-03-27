@@ -1,0 +1,19 @@
+[package]
+name = "discord-multisig-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serenity = { git = "https://github.com/serenity-rs/serenity", branch = "next", default-features = false, features = ["rustls_backend", "builder", "cache", "chrono", "client", "gateway", "model", "http", "utils"] }
+tokio = { version = "1.26.0", features = ["macros", "rt-multi-thread"] }
+subxt = { git = "https://github.com/paritytech/subxt", branch = "master" }
+futures = "0.3.27"
+codec = { package = "parity-scale-codec", version = "3.0.0", features = ["derive", "full", "bit-vec"] }
+hex = "0.4.3"
+dotenv = "0.15.0"
+derive_more = "0.99.17"
+serde = "1.0.158"
+serde_json = "1.0.94"
+sled = "0.34.7"
